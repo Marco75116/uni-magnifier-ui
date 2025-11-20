@@ -1,6 +1,10 @@
 # Octav Frontend Template
 
-![Octav Logo](https://octav.fi/wp-content/uploads/2025/04/664389576848949e02d53bc4_octav-long-white.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./public/sideview-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="./public/sideview-light.png" />
+  <img alt="Project Logo" src="./public/sideview-light.png" />
+</picture>
 
 A modern frontend template built with React, Next.js, and Shadcn UI. This template provides a complete foundation for building web applications with Octav Portfolio API integration.
 
@@ -65,7 +69,7 @@ OCTAV_API_KEY=your_octav_api_key_here
 
 ## Octav Portfolio API Integration
 
-This template includes an example of integration with the [Octav Portfolio API](https://api-docs.octav.fi/api-models/portfolio) to fetch and display portfolio data for blockchain addresses.
+This template includes an example of integration with the [Octav Portfolio API](https://docs.octav.fi/api/endpoints/portfolio) to fetch and display portfolio data for blockchain addresses.
 
 ### NextJS API Endpoint
 
@@ -165,15 +169,13 @@ if (error) {
 
 Check out `/components/example/portfolio.tsx` for a complete example of how to use the portfolio API in your components.
 
-## Octav API Documentation
+### Full API Documentation
 
-For complete API documentation, visit:
-
-- **Portfolio API**: [https://api-docs.octav.fi/api-models/portfolio](https://api-docs.octav.fi/api-models/portfolio)
-- **API Access & Pricing**: [https://api-docs.octav.fi/getting-started/api-access](https://api-docs.octav.fi/getting-started/api-access)
-- **Get API Key**: [https://data.octav.fi](https://data.octav.fi)
-- **Supported Chains**: [https://api-docs.octav.fi/additional-informations/chains-supported-by-octav](https://api-docs.octav.fi/additional-informations/chains-supported-by-octav)
-- **Protocol Types**: [https://api-docs.octav.fi/additional-informations/protocol-types-supported-by-octav](https://api-docs.octav.fi/additional-informations/protocol-types-supported-by-octav)
+- **Portfolio API** — https://docs.octav.fi/api/endpoints/portfolio
+- **API Access & Pricing** — https://api-docs.octav.fi/getting-started/api-access
+- **Get an API Key** — https://data.octav.fi
+- **Supported Chains** — https://docs.octav.fi/api/reference/supported-chains
+- **Protocol Types** — https://docs.octav.fi/api/reference/protocol-types
 
 ## Project Structure
 
