@@ -34,6 +34,13 @@ Building a professional-grade Uniswap analytics application for asset managers a
 - **Uniswap V2/V3 Subgraph** for DEX analytics
 - **The Graph Protocol** for on-chain data
 
+### Database
+- **ClickHouse** for analytics and time-series data
+  - Client: `@clickhouse/client`
+  - Connection: HTTP interface on port 8123
+  - Service layer: `lib/services/clickhouse.service.ts`
+  - Client config: `lib/clients/clickhouse.client.ts`
+
 ---
 
 ## Code Standards & Architecture
@@ -72,17 +79,249 @@ components/
 
 #### Service Layer
 ```
-services/
-├── uniswap/
-│   ├── pools.ts       # Pool data fetching
-│   ├── tokens.ts      # Token data fetching
-│   ├── swaps.ts       # Swap history
-│   └── loader.ts      # React Query hooks
-├── octav/
-│   └── portfolio.ts   # Portfolio integration
-└── blockchain/
-    └── contracts.ts   # Smart contract interactions
+lib/
+├── services/
+│   ├── clickhouse.service.ts  # ClickHouse queries (main service)
+│   ├── uniswap/
+│   │   ├── pools.ts       # Pool data fetching
+│   │   ├── tokens.ts      # Token data fetching
+│   │   ├── swaps.ts       # Swap history
+│   │   └── loader.ts      # React Query hooks
+│   ├── octav/
+│   │   └── portfolio.ts   # Portfolio integration
+│   └── blockchain/
+│       └── contracts.ts   # Smart contract interactions
+└── clients/
+    └── clickhouse.client.ts   # ClickHouse client singleton
 ```
+
+---
+
+## ClickHouse Integration
+
+### Setup & Configuration
+
+ClickHouse is used for storing and querying analytics data, time-series data, and large datasets efficiently.
+
+**Environment Variables** (`.env.local`):
+```bash
+CLICKHOUSE_URL="http://localhost:8123"
+CLICKHOUSE_USER="default"
+CLICKHOUSE_PASSWORD="default"
+CLICKHOUSE_DATABASE="default"
+```
+
+**Docker Setup**:
+```yaml
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    ports:
+      - "8123:8123"
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: default
+```
+
+### Best Practices
+
+#### 1. Always Use Parameterized Queries
+**CRITICAL**: Never concatenate user input into SQL queries. Always use parameters to prevent SQL injection.
+
+```typescript
+// ✅ GOOD - Safe from SQL injection
+const pools = await ClickHouseService.queryWithParams<Pool>(
+  `SELECT * FROM pools WHERE pool_address = {address:String}`,
+  { address: userInput }
+);
+
+// ❌ BAD - Vulnerable to SQL injection
+const pools = await ClickHouseService.queryWithParams(
+  `SELECT * FROM pools WHERE pool_address = '${userInput}'`
+);
+```
+
+#### 2. Type Your Responses
+Always define TypeScript interfaces for query results:
+
+```typescript
+interface PoolData {
+  pool_address: string;
+  token0: string;
+  token1: string;
+  tvl: string;  // ClickHouse returns numbers as strings
+  volume_24h: string;
+}
+
+const pools = await ClickHouseService.queryWithParams<PoolData>(
+  query,
+  params
+);
+```
+
+#### 3. Use Streaming for Large Results
+For queries that return large datasets, use streaming to avoid memory issues:
+
+```typescript
+await ClickHouseService.streamQuery<SwapEvent>(
+  `SELECT * FROM swaps WHERE timestamp >= {startDate:DateTime}`,
+  { startDate: '2024-01-01 00:00:00' },
+  (row) => {
+    // Process each row as it arrives
+    processSwapEvent(row);
+  }
+);
+```
+
+#### 4. Handle Errors Gracefully
+Always wrap ClickHouse queries in try-catch blocks:
+
+```typescript
+try {
+  const data = await ClickHouseService.queryWithParams(query, params);
+  return data;
+} catch (error) {
+  console.error('ClickHouse query failed:', error);
+  throw new Error('Failed to fetch pool data');
+}
+```
+
+### Common Query Patterns
+
+#### Fetching Pool Data
+```typescript
+const pools = await ClickHouseService.queryWithParams<Pool>(
+  `
+  SELECT
+    pool_address,
+    token0_symbol,
+    token1_symbol,
+    tvl,
+    volume_24h,
+    fee_tier
+  FROM pools
+  WHERE chain_id = {chainId:UInt64}
+    AND tvl > {minTvl:Float64}
+  ORDER BY tvl DESC
+  LIMIT {limit:UInt32}
+  `,
+  {
+    chainId: 1,
+    minTvl: 100000,
+    limit: 100
+  }
+);
+```
+
+#### Time-Series Aggregations
+```typescript
+const volumeByDay = await ClickHouseService.queryWithParams<{
+  date: string;
+  total_volume: string;
+}>(
+  `
+  SELECT
+    toDate(timestamp) as date,
+    sum(volume_usd) as total_volume
+  FROM swaps
+  WHERE pool_address = {poolAddress:String}
+    AND timestamp >= {startTime:DateTime}
+  GROUP BY date
+  ORDER BY date
+  `,
+  {
+    poolAddress: '0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640',
+    startTime: '2024-01-01 00:00:00'
+  }
+);
+```
+
+#### Inserting Data
+```typescript
+await ClickHouseService.insert('swaps', [
+  {
+    pool_address: '0x123...',
+    timestamp: new Date().toISOString(),
+    amount0: '1000.5',
+    amount1: '2000.75',
+    sender: '0xabc...',
+  }
+]);
+```
+
+### ClickHouse Data Types
+
+When using query parameters, specify the correct type:
+
+| Type | Example | Use Case |
+|------|---------|----------|
+| `String` | `{param:String}` | Addresses, text |
+| `UInt64` | `{param:UInt64}` | Chain IDs, block numbers |
+| `Int64` | `{param:Int64}` | Signed integers |
+| `Float64` | `{param:Float64}` | Prices, amounts |
+| `DateTime` | `{param:DateTime}` | Timestamps |
+| `UUID` | `{param:UUID}` | UUIDs |
+| `Array(String)` | `{param:Array(String)}` | Arrays |
+
+### Server Component Example
+
+Query ClickHouse directly from Server Components (no API routes needed for read-only queries):
+
+```typescript
+// app/(dashboard)/pools/page.tsx
+import { ClickHouseService } from '@/lib/services/clickhouse.service';
+
+interface Pool {
+  pool_address: string;
+  token0_symbol: string;
+  token1_symbol: string;
+  tvl: string;
+  volume_24h: string;
+}
+
+export default async function PoolsPage() {
+  // Query directly in server component
+  const pools = await ClickHouseService.queryWithParams<Pool>(
+    `
+    SELECT
+      pool_address,
+      token0_symbol,
+      token1_symbol,
+      tvl,
+      volume_24h
+    FROM pools
+    WHERE chain_id = {chainId:UInt64}
+    ORDER BY tvl DESC
+    LIMIT {limit:UInt32}
+    `,
+    { chainId: 1, limit: 100 }
+  );
+
+  return (
+    <div>
+      <h1>Top Pools</h1>
+      {pools.map((pool) => (
+        <div key={pool.pool_address}>
+          {pool.token0_symbol}/{pool.token1_symbol}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Service Layer Files
+
+- **Client**: `lib/clients/clickhouse.client.ts` - Singleton ClickHouse client
+- **Service**: `lib/services/clickhouse.service.ts` - Helper methods for queries
+
+### Performance Tips
+
+1. **Server Components**: Query directly in Server Components for initial data (no client-side fetch needed)
+2. **Limit data points**: Use `LIMIT` clause for large result sets
+3. **Index properly**: Ensure tables have proper ORDER BY keys
+4. **Aggregate old data**: Use materialized views for historical aggregations
+5. **Next.js Caching**: Leverage Next.js data caching and revalidation strategies
 
 ---
 
