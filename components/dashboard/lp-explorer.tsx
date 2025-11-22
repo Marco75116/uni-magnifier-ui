@@ -3,56 +3,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { truncateAddress } from '@/lib/helpers/global.helper';
+import { InfoTooltip } from './info-tooltip';
 
 // Mock data
 const mockLPs = [
   {
     id: '1',
     wallet: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-    totalTVL: '$12.4M',
+    assetsValue: '$12.4M',
     positions: 23,
     activePools: 15,
-    unrealizedPnL: '+$234.5K',
+    pnl: '+$234.5K',
+    adjustedPnl: '+$189.2K',
     timeInMarket: '18 months',
     lastActivity: '2 days ago',
   },
   {
     id: '2',
     wallet: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-    totalTVL: '$8.7M',
+    assetsValue: '$8.7M',
     positions: 18,
     activePools: 12,
-    unrealizedPnL: '+$156.2K',
+    pnl: '+$156.2K',
+    adjustedPnl: '+$128.5K',
     timeInMarket: '14 months',
     lastActivity: '5 hours ago',
   },
   {
     id: '3',
     wallet: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    totalTVL: '$6.2M',
+    assetsValue: '$6.2M',
     positions: 31,
     activePools: 19,
-    unrealizedPnL: '-$42.3K',
+    pnl: '+$42.3K',
+    adjustedPnl: '-$18.7K',
     timeInMarket: '22 months',
     lastActivity: '1 day ago',
   },
   {
     id: '4',
     wallet: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-    totalTVL: '$5.1M',
+    assetsValue: '$5.1M',
     positions: 14,
     activePools: 9,
-    unrealizedPnL: '+$98.7K',
+    pnl: '+$98.7K',
+    adjustedPnl: '+$76.4K',
     timeInMarket: '6 months',
     lastActivity: '3 hours ago',
   },
   {
     id: '5',
     wallet: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    totalTVL: '$4.3M',
+    assetsValue: '$4.3M',
     positions: 27,
     activePools: 16,
-    unrealizedPnL: '+$187.4K',
+    pnl: '+$187.4K',
+    adjustedPnl: '+$156.8K',
     timeInMarket: '12 months',
     lastActivity: '6 days ago',
   },
@@ -64,10 +70,21 @@ function LPTable() {
       <TableHeader>
         <TableRow>
           <TableHead>Wallet</TableHead>
-          <TableHead>Total TVL</TableHead>
+          <TableHead>Assets Value</TableHead>
           <TableHead>Positions</TableHead>
           <TableHead>Active Pools</TableHead>
-          <TableHead>Unrealized P&L</TableHead>
+          <TableHead>
+            <span className="flex items-center gap-1">
+              PnL
+              <InfoTooltip content="Assets + Fees" />
+            </span>
+          </TableHead>
+          <TableHead>
+            <span className="flex items-center gap-1">
+              Adjusted PnL
+              <InfoTooltip content="Includes impermanent loss" />
+            </span>
+          </TableHead>
           <TableHead>Time in Market</TableHead>
         </TableRow>
       </TableHeader>
@@ -81,7 +98,7 @@ function LPTable() {
             </TableCell>
             <TableCell className="font-medium">
               <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.totalTVL}
+                {lp.assetsValue}
               </Link>
             </TableCell>
             <TableCell>
@@ -94,9 +111,14 @@ function LPTable() {
                 {lp.activePools}
               </Link>
             </TableCell>
-            <TableCell className={lp.unrealizedPnL.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+            <TableCell className={lp.pnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
               <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.unrealizedPnL}
+                {lp.pnl}
+              </Link>
+            </TableCell>
+            <TableCell className={lp.adjustedPnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
+                {lp.adjustedPnl}
               </Link>
             </TableCell>
             <TableCell>

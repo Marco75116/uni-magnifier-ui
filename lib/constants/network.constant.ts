@@ -19,6 +19,7 @@ export type Token = {
 };
 
 export type NetworkConfig = {
+  name: string;
   gatewaySqdUrl: string;
   finalityConfirmation: number;
   chainId: number;

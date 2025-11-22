@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Network, Droplets, ShieldCheck, Users } from 'lucide-react';
+import { networksConfigs } from '@/lib/constants/network.constant';
 
 interface MetricCardProps {
   title: string;
   value: string;
-  subtitle: string;
+  subtitle: string | React.ReactNode;
   icon: React.ReactNode;
 }
 
@@ -17,19 +18,24 @@ function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground">{subtitle}</p>
+        <div className="text-xs text-muted-foreground">{subtitle}</div>
       </CardContent>
     </Card>
   );
 }
 
 export function MetricCards() {
+  const networkCount = Object.keys(networksConfigs).length;
+  const networkNames = Object.values(networksConfigs)
+    .map((config) => config.name)
+    .join(', ');
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <MetricCard
         title="Supported Networks"
-        value="5"
-        subtitle="Ethereum, Arbitrum, Base, Optimism, Polygon"
+        value={networkCount.toString()}
+        subtitle={networkNames}
         icon={<Network className="h-4 w-4 text-muted-foreground" />}
       />
       <MetricCard

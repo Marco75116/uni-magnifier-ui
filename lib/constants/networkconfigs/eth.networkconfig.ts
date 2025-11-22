@@ -3,6 +3,7 @@ import type { NetworkConfig } from '../network.constant';
 import { normalizeAddress } from '@/lib/helpers/global.helper';
 
 export const ethNetworkConfig: NetworkConfig = {
+  name: 'Ethereum',
   chainId: 1,
   chainTag: 'eth',
   gatewaySqdUrl: 'https://portal.sqd.dev/datasets/ethereum-mainnet',
