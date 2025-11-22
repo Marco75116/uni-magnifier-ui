@@ -264,7 +264,7 @@ export function filterBySearch<T>(array: T[], searchTerm: string, keys: (keyof T
 /**
  * Check if value is a valid number
  */
-export function isValidNumber(value: any): boolean {
+export function isValidNumber(value: unknown): boolean {
   return typeof value === 'number' && !isNaN(value) && isFinite(value);
 }
 
@@ -309,6 +309,7 @@ export function getValueBgClass(value: number): string {
 /**
  * Debounce function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -329,6 +330,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number

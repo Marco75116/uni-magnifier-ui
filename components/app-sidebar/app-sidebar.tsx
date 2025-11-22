@@ -5,7 +5,7 @@ import { Home } from 'lucide-react';
 
 import { NavItem, NavItems } from '@/components/app-sidebar/nav-items';
 
-import { Sidebar, SidebarContent, SidebarHeader, SidebarRail, SidebarTrigger, useSidebar } from '../ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, SidebarRail, useSidebar } from '../ui/sidebar';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 

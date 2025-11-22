@@ -18,7 +18,7 @@ export function DynamicBreadcrumb() {
     const breadcrumbs = [{ label: 'Home', href: '/' }];
 
     let currentPath = '';
-    paths.forEach((path, index) => {
+    paths.forEach((path) => {
       currentPath += `/${path}`;
 
       // Format path labels

@@ -119,7 +119,10 @@ export class ClickHouseService {
       const stream = resultSet.stream();
 
       for await (const rows of stream) {
-        rows.json<T>().forEach(onData);
+        for (const row of rows) {
+          const data = await row.json<T>();
+          onData(data);
+        }
       }
     } catch (error) {
       console.error('ClickHouse streaming error:', error);
