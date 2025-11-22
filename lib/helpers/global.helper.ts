@@ -99,6 +99,10 @@ export function isValidAddress(address: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
+export function normalizeAddress(address: string): string {
+  return address.toLowerCase();
+}
+
 // ============================================
 // DATE & TIME FORMATTING
 // ============================================
@@ -252,9 +256,7 @@ export function sortByNumeric<T>(array: T[], key: keyof T, direction: 'asc' | 'd
  */
 export function filterBySearch<T>(array: T[], searchTerm: string, keys: (keyof T)[]): T[] {
   const term = searchTerm.toLowerCase();
-  return array.filter((item) =>
-    keys.some((key) => String(item[key]).toLowerCase().includes(term))
-  );
+  return array.filter((item) => keys.some((key) => String(item[key]).toLowerCase().includes(term)));
 }
 
 // ============================================
@@ -310,10 +312,7 @@ export function getValueBgClass(value: number): string {
  * Debounce function
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
 
   return function executedFunction(...args: Parameters<T>) {
@@ -331,10 +330,7 @@ export function debounce<T extends (...args: any[]) => any>(
  * Throttle function
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function throttle<T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
+export function throttle<T extends (...args: any[]) => any>(func: T, limit: number): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
 
   return function executedFunction(...args: Parameters<T>) {
@@ -372,12 +368,15 @@ export function getUniqueValues<T>(array: T[]): T[] {
  * Group array by key
  */
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
-  return array.reduce((result, item) => {
-    const groupKey = String(item[key]);
-    if (!result[groupKey]) {
-      result[groupKey] = [];
-    }
-    result[groupKey].push(item);
-    return result;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (result, item) => {
+      const groupKey = String(item[key]);
+      if (!result[groupKey]) {
+        result[groupKey] = [];
+      }
+      result[groupKey].push(item);
+      return result;
+    },
+    {} as Record<string, T[]>
+  );
 }
