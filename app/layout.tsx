@@ -12,6 +12,7 @@ import './global.css';
 import { Toaster } from 'sonner';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Header } from '@/components/header/header';
+import { DynamicBreadcrumb } from '@/components/breadcrumb/dynamic-breadcrumb';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -47,7 +48,10 @@ export default function RootLayout({
 
               <SidebarInset>
                 <SidebarTrigger className="absolute text-sidebar-foreground z-10 mt-[26px] hidden lg:block " />
-                <div className="flex flex-1 flex-col gap-4 p-2 lg:p-6 pt-0 mt-16 lg:mt-0">{children}</div>
+                <div className="flex flex-1 flex-col gap-4 p-2 lg:p-6 pt-0 mt-16 lg:mt-0">
+                  <DynamicBreadcrumb />
+                  {children}
+                </div>
               </SidebarInset>
             </SidebarProvider>
             <Toaster />
