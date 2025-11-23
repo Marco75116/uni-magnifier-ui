@@ -177,3 +177,39 @@ export async function getWalletTotalPositions(walletAddress: string): Promise<nu
   const result = await ClickHouseService.queryWithParams<WalletTotalPositionsResult>(query);
   return parseInt(result[0]?.total_positions || '0');
 }
+
+export interface WalletPositionData {
+  chainId: number;
+  position_id: string;
+  pool_id: string;
+  tick_lower: number;
+  tick_upper: number;
+  liquidity: string;
+  creation_block_number: number;
+  creation_timestamp: number;
+}
+
+/**
+ * Get positions for a specific wallet address
+ * Ordered by liquidity (highest first)
+ */
+export async function getWalletPositions(walletAddress: string, limit: number = 10): Promise<WalletPositionData[]> {
+  const query = `
+    SELECT
+      chainId,
+      position_id,
+      pool_id,
+      tick_lower,
+      tick_upper,
+      liquidity,
+      creation_block_number,
+      creation_timestamp
+    FROM positions
+    WHERE sender = '${walletAddress.toLowerCase()}'
+    ORDER BY liquidity DESC
+    LIMIT ${limit}
+  `;
+
+  const result = await ClickHouseService.queryWithParams<WalletPositionData>(query);
+  return result;
+}

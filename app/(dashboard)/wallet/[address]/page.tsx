@@ -1,10 +1,11 @@
 import { generateMetadata } from '@/lib/metadata';
-import { truncateAddress } from '@/lib/helpers/global.helper';
+import { truncateAddress, formatPoolName, getRelativeTime } from '@/lib/helpers/global.helper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WalletStatsCards } from '@/components/wallet/wallet-stats-cards';
 import { WalletPositionsTableWrapper } from '@/components/wallet/wallet-positions-table-wrapper';
 import { CopyAddressButton } from '@/components/wallet/copy-address-button';
-import { getWalletTotalPositions } from '@/lib/helpers/queries.helper';
+import { getWalletTotalPositions, getWalletPositions } from '@/lib/helpers/queries.helper';
+import { ClickHouseService } from '@/lib/services/clickhouse.service';
 
 export const metadata = generateMetadata({
   title: 'Wallet Details',
@@ -15,285 +16,70 @@ interface PageProps {
   params: Promise<{ address: string }>;
 }
 
+// Helper to get pool data for current tick
+async function getPoolData(poolId: string, chainId: number) {
+  const query = `
+    SELECT tick, currency0, currency1
+    FROM pools
+    WHERE pool_id = '${poolId.toLowerCase()}' AND chainId = ${chainId} AND sign = 1
+    LIMIT 1
+  `;
+  const result = await ClickHouseService.queryWithParams<{
+    tick: number;
+    currency0: string;
+    currency1: string;
+  }>(query);
+  return result[0];
+}
+
 export default async function WalletPage({ params }: PageProps) {
   const { address } = await params;
 
-  // Fetch real total positions count from ClickHouse
+  // Fetch real data from ClickHouse
   const totalPositionsCount = await getWalletTotalPositions(address);
+  const walletPositions = await getWalletPositions(address, 10);
 
-  // Mock data - will be replaced with real data from ClickHouse
-  const rawPositions = [
-    {
-      id: '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
-      chainId: 1,
-      poolId: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-      poolName: 'USDC/ETH',
-      amount0: '542,000',
-      symbol0: 'USDC',
-      amount1: '156.8',
-      symbol1: 'ETH',
-      fees0: '1,245',
-      fees1: '0.36',
-      age: '3 days',
-      pnl: 12.45,
-      pnlAdjusted: 8.32,
-      tickLower: -887220,
-      tickUpper: 887220,
-      currentTick: -276324,
-    },
-    {
-      id: '0x2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c',
-      chainId: 8453,
-      poolId: '0x4c36388be6f416a29c8d8eee81c771ce6be14b18',
-      poolName: 'USDC/ETH',
-      amount0: '428,500',
-      symbol0: 'USDC',
-      amount1: '124.2',
-      symbol1: 'ETH',
-      fees0: '985',
-      fees1: '0.28',
-      age: '5 days',
-      pnl: 8.76,
-      pnlAdjusted: 5.21,
-      tickLower: -276400,
-      tickUpper: -276200,
-      currentTick: -276324,
-    },
-    {
-      id: '0x3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d',
-      chainId: 1,
-      poolId: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-      poolName: 'USDC/ETH',
-      amount0: '327,100',
-      symbol0: 'USDC',
-      amount1: '94.8',
-      symbol1: 'ETH',
-      fees0: '752',
-      fees1: '0.22',
-      age: '1 week',
-      pnl: -2.34,
-      pnlAdjusted: -4.12,
-      tickLower: -276500,
-      tickUpper: -276100,
-      currentTick: -276324,
-    },
-    {
-      id: '0x4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e',
-      chainId: 10,
-      poolId: '0x85149247691df622eaf1a8bd0cafd40bc45154a9',
-      poolName: 'USDC/ETH',
-      amount0: '271,500',
-      symbol0: 'USDC',
-      amount1: '78.7',
-      symbol1: 'ETH',
-      fees0: '1,865',
-      fees1: '0.54',
-      age: '2 weeks',
-      pnl: 15.89,
-      pnlAdjusted: 11.45,
-      tickLower: -400000,
-      tickUpper: -150000,
-      currentTick: -276324,
-    },
-    {
-      id: '0x5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f',
-      chainId: 8453,
-      poolId: '0x4c36388be6f416a29c8d8eee81c771ce6be14b18',
-      poolName: 'USDC/ETH',
-      amount0: '216,000',
-      symbol0: 'USDC',
-      amount1: '62.6',
-      symbol1: 'ETH',
-      fees0: '156',
-      fees1: '0.05',
-      age: '18 hours',
-      pnl: 3.21,
-      pnlAdjusted: 2.87,
-      tickLower: -100000,
-      tickUpper: 100000,
-      currentTick: -276324,
-    },
-    {
-      id: '0x6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a',
-      chainId: 42161,
-      poolId: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443',
-      poolName: 'USDC/ETH',
-      amount0: '160,500',
-      symbol0: 'USDC',
-      amount1: '46.5',
-      symbol1: 'ETH',
-      fees0: '1,125',
-      fees1: '0.33',
-      age: '3 weeks',
-      pnl: -5.67,
-      pnlAdjusted: -8.23,
-      tickLower: 200000,
-      tickUpper: 450000,
-      currentTick: -276324,
-    },
-    {
-      id: '0x7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b',
-      chainId: 1,
-      poolId: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-      poolName: 'USDC/ETH',
-      amount0: '143,500',
-      symbol0: 'USDC',
-      amount1: '41.6',
-      symbol1: 'ETH',
-      fees0: '654',
-      fees1: '0.19',
-      age: '6 days',
-      pnl: 9.12,
-      pnlAdjusted: 6.34,
-      tickLower: -276350,
-      tickUpper: -276250,
-      currentTick: -276324,
-    },
-    {
-      id: '0x8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c',
-      chainId: 137,
-      poolId: '0x45dda9cb7c25131df268515131f647d726f50608',
-      poolName: 'USDC/ETH',
-      amount0: '99,000',
-      symbol0: 'USDC',
-      amount1: '28.7',
-      symbol1: 'ETH',
-      fees0: '425',
-      fees1: '0.12',
-      age: '4 days',
-      pnl: 6.54,
-      pnlAdjusted: 4.21,
-      tickLower: -500000,
-      tickUpper: 50000,
-      currentTick: -276324,
-    },
-    {
-      id: '0x9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d',
-      chainId: 8453,
-      poolId: '0x4c36388be6f416a29c8d8eee81c771ce6be14b18',
-      poolName: 'USDC/ETH',
-      amount0: '88,000',
-      symbol0: 'USDC',
-      amount1: '25.5',
-      symbol1: 'ETH',
-      fees0: '98',
-      fees1: '0.03',
-      age: '12 hours',
-      pnl: 1.87,
-      pnlAdjusted: 1.65,
-      tickLower: -276340,
-      tickUpper: -276300,
-      currentTick: -276324,
-    },
-    {
-      id: '0xa0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9',
-      chainId: 1,
-      poolId: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-      poolName: 'USDC/ETH',
-      amount0: '72,500',
-      symbol0: 'USDC',
-      amount1: '21.0',
-      symbol1: 'ETH',
-      fees0: '2,458',
-      fees1: '0.71',
-      age: '1 month',
-      pnl: 22.34,
-      pnlAdjusted: 18.76,
-      tickLower: -50000,
-      tickUpper: -25000,
-      currentTick: -276324,
-    },
-    {
-      id: '0xb1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0',
-      chainId: 10,
-      poolId: '0x85149247691df622eaf1a8bd0cafd40bc45154a9',
-      poolName: 'USDC/ETH',
-      amount0: '385,000',
-      symbol0: 'USDC',
-      amount1: '111.5',
-      symbol1: 'ETH',
-      fees0: '1,534',
-      fees1: '0.44',
-      age: '8 days',
-      pnl: 14.23,
-      pnlAdjusted: 10.87,
-      tickLower: -276450,
-      tickUpper: -276150,
-      currentTick: -276324,
-    },
-    {
-      id: '0xc2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1',
-      chainId: 42161,
-      poolId: '0xc31e54c7a869b9fcbecc14363cf510d1c41fa443',
-      poolName: 'USDC/ETH',
-      amount0: '198,000',
-      symbol0: 'USDC',
-      amount1: '57.4',
-      symbol1: 'ETH',
-      fees0: '478',
-      fees1: '0.14',
-      age: '2 days',
-      pnl: 7.89,
-      pnlAdjusted: 5.43,
-      tickLower: -300000,
-      tickUpper: -250000,
-      currentTick: -276324,
-    },
-    {
-      id: '0xd3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2',
-      chainId: 1,
-      poolId: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640',
-      poolName: 'USDC/ETH',
-      amount0: '452,000',
-      symbol0: 'USDC',
-      amount1: '131.0',
-      symbol1: 'ETH',
-      fees0: '312',
-      fees1: '0.09',
-      age: '15 hours',
-      pnl: 4.56,
-      pnlAdjusted: 3.92,
-      tickLower: -276380,
-      tickUpper: -276280,
-      currentTick: -276324,
-    },
-    {
-      id: '0xe4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3',
-      chainId: 8453,
-      poolId: '0x4c36388be6f416a29c8d8eee81c771ce6be14b18',
-      poolName: 'USDC/ETH',
-      amount0: '123,500',
-      symbol0: 'USDC',
-      amount1: '35.8',
-      symbol1: 'ETH',
-      fees0: '1,678',
-      fees1: '0.49',
-      age: '5 weeks',
-      pnl: -11.23,
-      pnlAdjusted: -14.56,
-      tickLower: -350000,
-      tickUpper: -200000,
-      currentTick: -276324,
-    },
-    {
-      id: '0xf5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4',
-      chainId: 137,
-      poolId: '0x45dda9cb7c25131df268515131f647d726f50608',
-      poolName: 'USDC/ETH',
-      amount0: '267,000',
-      symbol0: 'USDC',
-      amount1: '77.4',
-      symbol1: 'ETH',
-      fees0: '1,234',
-      fees1: '0.36',
-      age: '10 days',
-      pnl: 18.45,
-      pnlAdjusted: 15.23,
-      tickLower: -276420,
-      tickUpper: -276220,
-      currentTick: -276324,
-    },
+  // Mock data for fields not in query (amounts, fees, pnl)
+  const mockDataVariations = [
+    { amount0: '542,000', symbol0: 'USDC', amount1: '156.8', symbol1: 'ETH', fees0: '1,245', fees1: '0.36', pnl: 12.45, pnlAdjusted: 8.32 },
+    { amount0: '428,500', symbol0: 'USDC', amount1: '124.2', symbol1: 'ETH', fees0: '985', fees1: '0.28', pnl: 8.76, pnlAdjusted: 5.42 },
+    { amount0: '312,800', symbol0: 'USDC', amount1: '90.6', symbol1: 'ETH', fees0: '756', fees1: '0.22', pnl: -3.21, pnlAdjusted: -5.87 },
+    { amount0: '789,200', symbol0: 'USDC', amount1: '228.5', symbol1: 'ETH', fees0: '1,876', fees1: '0.54', pnl: 15.32, pnlAdjusted: 11.98 },
+    { amount0: '234,600', symbol0: 'USDC', amount1: '68.0', symbol1: 'ETH', fees0: '543', fees1: '0.16', pnl: 6.54, pnlAdjusted: 3.21 },
+    { amount0: '156,300', symbol0: 'USDC', amount1: '45.3', symbol1: 'ETH', fees0: '378', fees1: '0.11', pnl: -2.45, pnlAdjusted: -4.12 },
+    { amount0: '623,400', symbol0: 'USDC', amount1: '180.6', symbol1: 'ETH', fees0: '1,456', fees1: '0.42', pnl: 9.87, pnlAdjusted: 7.23 },
+    { amount0: '345,700', symbol0: 'USDC', amount1: '100.2', symbol1: 'ETH', fees0: '823', fees1: '0.24', pnl: 4.32, pnlAdjusted: 2.01 },
+    { amount0: '567,800', symbol0: 'USDC', amount1: '164.5', symbol1: 'ETH', fees0: '1,321', fees1: '0.38', pnl: -7.65, pnlAdjusted: -10.23 },
+    { amount0: '892,300', symbol0: 'USDC', amount1: '258.6', symbol1: 'ETH', fees0: '2,087', fees1: '0.60', pnl: 18.92, pnlAdjusted: 15.67 },
   ];
+
+  // Map real positions data from ClickHouse
+  const rawPositions = await Promise.all(
+    walletPositions.map(async (pos, index) => {
+      // Fetch pool data to get current tick and currencies
+      const poolData = await getPoolData(pos.pool_id, pos.chainId);
+      const mockData = mockDataVariations[index % mockDataVariations.length];
+
+      return {
+        id: pos.position_id,
+        chainId: pos.chainId,
+        poolId: pos.pool_id,
+        poolName: poolData ? formatPoolName(poolData.currency0, poolData.currency1, pos.chainId) : 'Unknown',
+        amount0: mockData.amount0,
+        symbol0: mockData.symbol0,
+        amount1: mockData.amount1,
+        symbol1: mockData.symbol1,
+        fees0: mockData.fees0,
+        fees1: mockData.fees1,
+        age: getRelativeTime(new Date(pos.creation_timestamp * 1000)),
+        pnl: mockData.pnl,
+        pnlAdjusted: mockData.pnlAdjusted,
+        tickLower: pos.tick_lower,
+        tickUpper: pos.tick_upper,
+        currentTick: poolData?.tick || 0,
+      };
+    })
+  );
 
   // Compute status based on whether current tick is in range
   const positions = rawPositions.map((pos) => {
