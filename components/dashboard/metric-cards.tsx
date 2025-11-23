@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Network, Droplets, ShieldCheck, Users } from 'lucide-react';
 import { networksConfigs } from '@/lib/constants/network.constant';
+import { getTotalPools, getBlueChipPools } from '@/lib/helpers/queries.helper';
 
 interface MetricCardProps {
   title: string;
@@ -24,11 +25,18 @@ function MetricCard({ title, value, subtitle, icon }: MetricCardProps) {
   );
 }
 
-export function MetricCards() {
+export async function MetricCards() {
   const networkCount = Object.keys(networksConfigs).length;
   const networkNames = Object.values(networksConfigs)
     .map((config) => config.name)
     .join(', ');
+
+  const blueChipTickers = Object.values(networksConfigs)
+    .flatMap((config) => config.blueChipTokens.map((token) => token.ticker))
+    .filter((ticker, index, self) => self.indexOf(ticker) === index)
+    .join(', ');
+
+  const [totalPools, blueChipPools] = await Promise.all([getTotalPools(), getBlueChipPools()]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -40,14 +48,14 @@ export function MetricCards() {
       />
       <MetricCard
         title="Total Pools"
-        value="10,882"
+        value={totalPools.toLocaleString()}
         subtitle="Active liquidity pools"
         icon={<Droplets className="h-4 w-4 text-muted-foreground" />}
       />
       <MetricCard
         title="Blue Chip Pools"
-        value="2,341"
-        subtitle="Paired with ETH, USDC, USDT, DAI"
+        value={blueChipPools.toLocaleString()}
+        subtitle={`Paired with ${blueChipTickers}`}
         icon={<ShieldCheck className="h-4 w-4 text-muted-foreground" />}
       />
       <MetricCard
