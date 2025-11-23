@@ -3,6 +3,7 @@ import { truncateAddress } from '@/lib/helpers/global.helper';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { WalletStatsCards } from '@/components/wallet/wallet-stats-cards';
 import { WalletPositionsTableWrapper } from '@/components/wallet/wallet-positions-table-wrapper';
+import { CopyAddressButton } from '@/components/wallet/copy-address-button';
 
 export const metadata = generateMetadata({
   title: 'Wallet Details',
@@ -333,7 +334,10 @@ export default async function WalletPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Wallet Details</h1>
-        <p className="text-muted-foreground font-mono">{truncateAddress(address, 10)}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-muted-foreground font-mono">{truncateAddress(address, 10)}</p>
+          <CopyAddressButton address={address} />
+        </div>
       </div>
 
       {/* Stats Cards */}
