@@ -8,6 +8,7 @@ export const ethNetworkConfig: NetworkConfig = {
   chainTag: 'eth',
   gatewaySqdUrl: 'https://portal.sqd.dev/datasets/ethereum-mainnet',
   finalityConfirmation: 12,
+  scannerUrl: 'https://etherscan.io',
   contracts: {
     PoolManager: {
       address: normalizeAddress('0x000000000004444c5dc75cB358380D2e3dE08A90'),

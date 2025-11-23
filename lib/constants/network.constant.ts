@@ -28,6 +28,7 @@ export type NetworkConfig = {
   chainTag: string;
   contracts: ContractsConfig;
   blueChipTokens: Token[];
+  scannerUrl: string;
 };
 
 export const networksConfigs: Record<string, NetworkConfig> = {

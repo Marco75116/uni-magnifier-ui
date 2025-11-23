@@ -8,6 +8,7 @@ export const unichainNetworkConfig: NetworkConfig = {
   chainTag: 'uni',
   gatewaySqdUrl: 'https://portal.sqd.dev/datasets/unichain-mainnet',
   finalityConfirmation: 1,
+  scannerUrl: 'https://uniscan.xyz',
   contracts: {
     PoolManager: {
       address: normalizeAddress('0x1f98400000000000000000000000000000000004'),

@@ -8,6 +8,7 @@ export const baseNetworkConfig: NetworkConfig = {
   chainTag: "base",
   gatewaySqdUrl: "https://portal.sqd.dev/datasets/base-mainnet",
   finalityConfirmation: 1,
+  scannerUrl: "https://basescan.org",
   contracts: {
     PoolManager: {
       address: normalizeAddress("0x498581ff718922c3f8e6a244956af099b2652b2b"),

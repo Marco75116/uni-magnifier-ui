@@ -439,3 +439,36 @@ export function formatPoolName(currency0: string, currency1: string, chainId: nu
 export function formatFeeTier(fee: number): string {
   return `${(fee / 10000).toFixed(2)}%`;
 }
+
+/**
+ * Get scanner URL for a given chainId
+ */
+export function getScannerUrl(chainId: number): string {
+  // Import networksConfigs dynamically to avoid circular dependencies
+  const { networksConfigs } = require('@/lib/constants/network.constant');
+
+  for (const config of Object.values(networksConfigs)) {
+    if ((config as any).chainId === chainId) {
+      return (config as any).scannerUrl || 'https://etherscan.io';
+    }
+  }
+
+  // Fallback URLs for common chains not in config
+  const fallbackUrls: Record<number, string> = {
+    1: 'https://etherscan.io',
+    10: 'https://optimistic.etherscan.io',
+    137: 'https://polygonscan.com',
+    42161: 'https://arbiscan.io',
+    8453: 'https://basescan.org',
+  };
+
+  return fallbackUrls[chainId] || 'https://etherscan.io';
+}
+
+/**
+ * Get address scanner URL for a given address and chainId
+ */
+export function getAddressScannerUrl(address: string, chainId: number = 1): string {
+  const scannerUrl = getScannerUrl(chainId);
+  return `${scannerUrl}/address/${address}`;
+}
