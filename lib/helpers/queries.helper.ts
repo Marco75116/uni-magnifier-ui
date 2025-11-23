@@ -147,7 +147,7 @@ export async function getTopLiquidityProviders(limit: number = 5): Promise<Liqui
       sender as wallet_address,
       count(DISTINCT position_id) as total_positions,
       count(DISTINCT pool_id) as unique_pools,
-      min(last_updated_timestamp) as first_position_date
+      min(creation_timestamp) as first_position_date
     FROM positions
     GROUP BY sender
     HAVING total_positions >= 12 AND total_positions <= 150
