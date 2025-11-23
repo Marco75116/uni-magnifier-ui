@@ -380,3 +380,62 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
     {} as Record<string, T[]>
   );
 }
+
+// ============================================
+// NETWORK & TOKEN HELPERS
+// ============================================
+
+/**
+ * Get token ticker by address across all network configs
+ */
+export function getTokenTicker(address: string, chainId: number): string {
+  // Import networksConfigs dynamically to avoid circular dependencies
+  const { networksConfigs } = require('@/lib/constants/network.constant');
+  const normalizedAddress = normalizeAddress(address);
+
+  // Find the network config for this chainId
+  for (const config of Object.values(networksConfigs)) {
+    if ((config as any).chainId === chainId) {
+      const token = (config as any).blueChipTokens.find(
+        (t: any) => t.address === normalizedAddress
+      );
+      if (token) {
+        return token.ticker;
+      }
+    }
+  }
+
+  // Return truncated address if not found
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+/**
+ * Get network name by chainId
+ */
+export function getNetworkName(chainId: number): string {
+  // Import networksConfigs dynamically to avoid circular dependencies
+  const { networksConfigs } = require('@/lib/constants/network.constant');
+
+  for (const config of Object.values(networksConfigs)) {
+    if ((config as any).chainId === chainId) {
+      return (config as any).name;
+    }
+  }
+  return `Chain ${chainId}`;
+}
+
+/**
+ * Format pool name from currency addresses
+ */
+export function formatPoolName(currency0: string, currency1: string, chainId: number): string {
+  const token0 = getTokenTicker(currency0, chainId);
+  const token1 = getTokenTicker(currency1, chainId);
+  return `${token0}/${token1}`;
+}
+
+/**
+ * Format fee tier to percentage string
+ */
+export function formatFeeTier(fee: number): string {
+  return `${(fee / 10000).toFixed(2)}%`;
+}

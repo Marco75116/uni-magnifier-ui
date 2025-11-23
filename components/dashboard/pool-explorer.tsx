@@ -4,62 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { getTopPools, type PoolData } from '@/lib/helpers/queries.helper';
+import { formatPoolName, formatFeeTier, getNetworkName } from '@/lib/helpers/global.helper';
 
-// Mock data
-const mockPools = [
-  {
-    id: '1',
-    pool: 'USDC/ETH',
-    tvl: '$125.4M',
-    volume24h: '$45.2M',
-    volume7d: '$312.8M',
-    feeTier: '0.05%',
-    apr: '12.4%',
-    chain: 'Ethereum',
-  },
-  {
-    id: '2',
-    pool: 'WETH/USDT',
-    tvl: '$98.7M',
-    volume24h: '$38.1M',
-    volume7d: '$267.3M',
-    feeTier: '0.30%',
-    apr: '15.2%',
-    chain: 'Arbitrum',
-  },
-  {
-    id: '3',
-    pool: 'USDC/USDT',
-    tvl: '$87.2M',
-    volume24h: '$52.3M',
-    volume7d: '$401.2M',
-    feeTier: '0.01%',
-    apr: '8.9%',
-    chain: 'Ethereum',
-  },
-  {
-    id: '4',
-    pool: 'DAI/USDC',
-    tvl: '$76.5M',
-    volume24h: '$28.7M',
-    volume7d: '$198.4M',
-    feeTier: '0.01%',
-    apr: '7.3%',
-    chain: 'Base',
-  },
-  {
-    id: '5',
-    pool: 'WBTC/ETH',
-    tvl: '$65.3M',
-    volume24h: '$22.1M',
-    volume7d: '$156.7M',
-    feeTier: '0.30%',
-    apr: '11.8%',
-    chain: 'Ethereum',
-  },
-];
+interface PoolTableProps {
+  pools: PoolData[];
+}
 
-function PoolTable() {
+function PoolTable({ pools }: PoolTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -86,41 +38,41 @@ function PoolTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {mockPools.map((pool) => (
-          <TableRow key={pool.id} className="cursor-pointer hover:bg-accent">
+        {pools.map((pool) => (
+          <TableRow key={pool.pool_id} className="cursor-pointer hover:bg-accent">
             <TableCell className="font-medium">
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                {pool.pool}
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                {formatPoolName(pool.currency0, pool.currency1, pool.chainId)}
               </Link>
             </TableCell>
             <TableCell>
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                {pool.tvl}
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                $125.4M
               </Link>
             </TableCell>
             <TableCell>
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                {pool.volume24h}
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                $45.2M
               </Link>
             </TableCell>
             <TableCell>
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                {pool.volume7d}
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                $312.8M
               </Link>
             </TableCell>
             <TableCell>
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                <Badge variant="outline">{pool.feeTier}</Badge>
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                <Badge variant="outline">{formatFeeTier(pool.fee)}</Badge>
               </Link>
             </TableCell>
             <TableCell className="text-green-600 dark:text-green-400">
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                {pool.apr}
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                12.4%
               </Link>
             </TableCell>
             <TableCell>
-              <Link href={`/pool/${pool.id}`} className="block w-full">
-                <Badge variant="secondary">{pool.chain}</Badge>
+              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
+                <Badge variant="secondary">{getNetworkName(pool.chainId)}</Badge>
               </Link>
             </TableCell>
           </TableRow>
@@ -130,7 +82,9 @@ function PoolTable() {
   );
 }
 
-export function PoolExplorer() {
+export async function PoolExplorer() {
+  const pools = await getTopPools(5);
+
   return (
     <Card>
       <CardHeader>
@@ -140,7 +94,7 @@ export function PoolExplorer() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <PoolTable />
+        <PoolTable pools={pools} />
       </CardContent>
     </Card>
   );

@@ -92,3 +92,40 @@ export async function getTotalPositions(): Promise<number> {
 
   return parseInt(result[0]?.total_positions || '0');
 }
+
+export interface PoolData {
+  chainId: number;
+  pool_id: string;
+  currency0: string;
+  currency1: string;
+  fee: number;
+  tick_spacing: number;
+  hooks: string;
+  sqrt_price_x96: string;
+  tick: number;
+}
+
+/**
+ * Get top 5 pools ordered by most recent
+ */
+export async function getTopPools(limit: number = 5): Promise<PoolData[]> {
+  const query = `
+    SELECT
+      chainId,
+      pool_id,
+      currency0,
+      currency1,
+      fee,
+      tick_spacing,
+      hooks,
+      sqrt_price_x96,
+      tick
+    FROM pools
+    WHERE sign = 1
+    ORDER BY timestamp DESC
+    LIMIT ${limit}
+  `;
+
+  const result = await ClickHouseService.queryWithParams<PoolData>(query);
+  return result;
+}
