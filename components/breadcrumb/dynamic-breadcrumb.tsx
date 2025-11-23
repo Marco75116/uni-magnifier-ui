@@ -9,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { getNetworkName } from '@/lib/helpers/global.helper';
 
 export function DynamicBreadcrumb() {
   const pathname = usePathname();
@@ -18,14 +19,20 @@ export function DynamicBreadcrumb() {
     const breadcrumbs = [{ label: 'Home', href: '/' }];
 
     let currentPath = '';
-    paths.forEach((path) => {
+    paths.forEach((path, index) => {
       currentPath += `/${path}`;
 
       // Format path labels
       let label = path;
 
-      // Check if it's an Ethereum address (starts with 0x and is 42 chars long)
-      if (path.startsWith('0x') && path.length === 42) {
+      // Check if we're in a pool route and this is the chainId parameter
+      if (paths[0] === 'pool' && index === 1 && !isNaN(Number(path))) {
+        // This is the chainId in /pool/[chainId]/[poolId]
+        const chainId = parseInt(path);
+        label = getNetworkName(chainId);
+      }
+      // Check if it's an Ethereum address or long hash (starts with 0x)
+      else if (path.startsWith('0x') && path.length > 20) {
         label = `${path.slice(0, 6)}...${path.slice(-4)}`;
       } else {
         // Capitalize first letter for regular paths
