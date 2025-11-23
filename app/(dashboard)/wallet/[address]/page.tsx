@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { WalletStatsCards } from '@/components/wallet/wallet-stats-cards';
 import { WalletPositionsTableWrapper } from '@/components/wallet/wallet-positions-table-wrapper';
 import { CopyAddressButton } from '@/components/wallet/copy-address-button';
-import { getWalletTotalPositions, getWalletPositions } from '@/lib/helpers/queries.helper';
+import { getWalletTotalPositions, getWalletPositions, getWalletPositionsLast30Days } from '@/lib/helpers/queries.helper';
 import { ClickHouseService } from '@/lib/services/clickhouse.service';
 
 export const metadata = generateMetadata({
@@ -38,6 +38,7 @@ export default async function WalletPage({ params }: PageProps) {
   // Fetch real data from ClickHouse
   const totalPositionsCount = await getWalletTotalPositions(address);
   const walletPositions = await getWalletPositions(address, 10);
+  const positionsLast30Days = await getWalletPositionsLast30Days(address);
 
   // Mock data for fields not in query (amounts, fees, pnl)
   const mockDataVariations = [
@@ -71,7 +72,12 @@ export default async function WalletPage({ params }: PageProps) {
         symbol1: mockData.symbol1,
         fees0: mockData.fees0,
         fees1: mockData.fees1,
-        age: getRelativeTime(new Date(pos.creation_timestamp * 1000)),
+        age: getRelativeTime(
+          // Check if timestamp is already in milliseconds (> year 2100 in seconds)
+          pos.creation_timestamp > 4102444800
+            ? new Date(pos.creation_timestamp)
+            : new Date(pos.creation_timestamp * 1000)
+        ),
         pnl: mockData.pnl,
         pnlAdjusted: mockData.pnlAdjusted,
         tickLower: pos.tick_lower,
@@ -116,7 +122,7 @@ export default async function WalletPage({ params }: PageProps) {
     unrealizedPnL: totalUnrealizedPnL >= 0 ? `+$${totalUnrealizedPnL.toFixed(2)}` : `-$${Math.abs(totalUnrealizedPnL).toFixed(2)}`,
     unrealizedPnLChangeClass:
       totalUnrealizedPnL >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400',
-    positionsLastMonth: 5,
+    positionsLastMonth: positionsLast30Days, // Use real count from ClickHouse
   };
 
   return (

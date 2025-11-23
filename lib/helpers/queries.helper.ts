@@ -213,3 +213,23 @@ export async function getWalletPositions(walletAddress: string, limit: number = 
   const result = await ClickHouseService.queryWithParams<WalletPositionData>(query);
   return result;
 }
+
+interface WalletPositionsLast30DaysResult {
+  positions_created_last_30_days: string;
+}
+
+/**
+ * Get count of positions created in the last 30 days for a specific wallet address
+ */
+export async function getWalletPositionsLast30Days(walletAddress: string): Promise<number> {
+  const query = `
+    SELECT
+      COUNT(*) as positions_created_last_30_days
+    FROM positions
+    WHERE sender = '${walletAddress.toLowerCase()}'
+      AND creation_timestamp >= now() - INTERVAL 30 DAY
+  `;
+
+  const result = await ClickHouseService.queryWithParams<WalletPositionsLast30DaysResult>(query);
+  return parseInt(result[0]?.positions_created_last_30_days || '0');
+}
