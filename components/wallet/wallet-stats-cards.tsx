@@ -18,7 +18,6 @@ interface WalletStatsCardsProps {
 export function WalletStatsCards({
   totalValue,
   totalValueChange,
-  activePositions,
   totalPositions,
   totalFees,
   totalFeesChange,

@@ -417,15 +417,16 @@ export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
  * Get token ticker by address across all network configs
  */
 export function getTokenTicker(address: string, chainId: number): string {
-  // Import networksConfigs dynamically to avoid circular dependencies
-  const { networksConfigs } = require('@/lib/constants/network.constant');
+  // Import types and configs dynamically to avoid circular dependencies
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { networksConfigs } = require('@/lib/constants/network.constant') as { networksConfigs: Record<string, { chainId: number; blueChipTokens: { address: string; ticker: string }[] }> };
   const normalizedAddress = normalizeAddress(address);
 
   // Find the network config for this chainId
   for (const config of Object.values(networksConfigs)) {
-    if ((config as any).chainId === chainId) {
-      const token = (config as any).blueChipTokens.find(
-        (t: any) => t.address === normalizedAddress
+    if (config.chainId === chainId) {
+      const token = config.blueChipTokens.find(
+        (t) => t.address === normalizedAddress
       );
       if (token) {
         return token.ticker;
@@ -441,12 +442,13 @@ export function getTokenTicker(address: string, chainId: number): string {
  * Get network name by chainId
  */
 export function getNetworkName(chainId: number): string {
-  // Import networksConfigs dynamically to avoid circular dependencies
-  const { networksConfigs } = require('@/lib/constants/network.constant');
+  // Import types and configs dynamically to avoid circular dependencies
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { networksConfigs } = require('@/lib/constants/network.constant') as { networksConfigs: Record<string, { chainId: number; name: string }> };
 
   for (const config of Object.values(networksConfigs)) {
-    if ((config as any).chainId === chainId) {
-      return (config as any).name;
+    if (config.chainId === chainId) {
+      return config.name;
     }
   }
   return `Chain ${chainId}`;
@@ -472,12 +474,13 @@ export function formatFeeTier(fee: number): string {
  * Get scanner URL for a given chainId
  */
 export function getScannerUrl(chainId: number): string {
-  // Import networksConfigs dynamically to avoid circular dependencies
-  const { networksConfigs } = require('@/lib/constants/network.constant');
+  // Import types and configs dynamically to avoid circular dependencies
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { networksConfigs } = require('@/lib/constants/network.constant') as { networksConfigs: Record<string, { chainId: number; scannerUrl: string }> };
 
   for (const config of Object.values(networksConfigs)) {
-    if ((config as any).chainId === chainId) {
-      return (config as any).scannerUrl || 'https://etherscan.io';
+    if (config.chainId === chainId) {
+      return config.scannerUrl || 'https://etherscan.io';
     }
   }
 

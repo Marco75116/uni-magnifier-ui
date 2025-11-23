@@ -33,7 +33,7 @@ export function buildBlueChipPoolsQuery(): string {
   const conditions: string[] = [];
 
   // Iterate through each network configuration
-  for (const [networkKey, config] of Object.entries(networksConfigs)) {
+  for (const config of Object.values(networksConfigs)) {
     const chainId = config.chainId;
     const blueChipAddresses = config.blueChipTokens.map((token) =>
       normalizeAddress(token.address)
