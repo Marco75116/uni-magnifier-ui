@@ -2,69 +2,27 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { truncateAddress } from '@/lib/helpers/global.helper';
+import { truncateAddress, getTimeDuration } from '@/lib/helpers/global.helper';
 import { InfoTooltip } from './info-tooltip';
+import { getTopLiquidityProviders, type LiquidityProviderData } from '@/lib/helpers/queries.helper';
 
-// Mock data
-const mockLPs = [
-  {
-    id: '1',
-    wallet: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
-    assetsValue: '$12.4M',
-    positions: 23,
-    activePools: 15,
-    pnl: '+$234.5K',
-    adjustedPnl: '+$189.2K',
-    timeInMarket: '18 months',
-    lastActivity: '2 days ago',
-  },
-  {
-    id: '2',
-    wallet: '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063',
-    assetsValue: '$8.7M',
-    positions: 18,
-    activePools: 12,
-    pnl: '+$156.2K',
-    adjustedPnl: '+$128.5K',
-    timeInMarket: '14 months',
-    lastActivity: '5 hours ago',
-  },
-  {
-    id: '3',
-    wallet: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    assetsValue: '$6.2M',
-    positions: 31,
-    activePools: 19,
-    pnl: '+$42.3K',
-    adjustedPnl: '-$18.7K',
-    timeInMarket: '22 months',
-    lastActivity: '1 day ago',
-  },
-  {
-    id: '4',
-    wallet: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
-    assetsValue: '$5.1M',
-    positions: 14,
-    activePools: 9,
-    pnl: '+$98.7K',
-    adjustedPnl: '+$76.4K',
-    timeInMarket: '6 months',
-    lastActivity: '3 hours ago',
-  },
-  {
-    id: '5',
-    wallet: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
-    assetsValue: '$4.3M',
-    positions: 27,
-    activePools: 16,
-    pnl: '+$187.4K',
-    adjustedPnl: '+$156.8K',
-    timeInMarket: '12 months',
-    lastActivity: '6 days ago',
-  },
-];
+// Mock data for fields not in query (assetsValue, pnl, adjustedPnl)
+function getMockDataForWallet(index: number) {
+  const variations = [
+    { assetsValue: '$12.4M', pnl: '+$234.5K', adjustedPnl: '+$189.2K' },
+    { assetsValue: '$8.7M', pnl: '+$156.2K', adjustedPnl: '+$128.5K' },
+    { assetsValue: '$6.2M', pnl: '+$42.3K', adjustedPnl: '-$18.7K' },
+    { assetsValue: '$5.1M', pnl: '+$98.7K', adjustedPnl: '+$76.4K' },
+    { assetsValue: '$4.3M', pnl: '+$187.4K', adjustedPnl: '+$156.8K' },
+  ];
+  return variations[index % variations.length];
+}
 
-function LPTable() {
+interface LPTableProps {
+  liquidityProviders: LiquidityProviderData[];
+}
+
+function LPTable({ liquidityProviders }: LPTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -72,7 +30,7 @@ function LPTable() {
           <TableHead>Wallet</TableHead>
           <TableHead>Assets Value</TableHead>
           <TableHead>Positions</TableHead>
-          <TableHead>Active Pools</TableHead>
+          <TableHead>Unique Pools</TableHead>
           <TableHead>
             <span className="flex items-center gap-1">
               PnL
@@ -89,51 +47,60 @@ function LPTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {mockLPs.map((lp) => (
-          <TableRow key={lp.id} className="cursor-pointer hover:bg-accent">
-            <TableCell className="font-mono text-sm">
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {truncateAddress(lp.wallet, 6)}
-              </Link>
-            </TableCell>
-            <TableCell className="font-medium">
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.assetsValue}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.positions}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.activePools}
-              </Link>
-            </TableCell>
-            <TableCell className={lp.pnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.pnl}
-              </Link>
-            </TableCell>
-            <TableCell className={lp.adjustedPnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                {lp.adjustedPnl}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/wallet/${lp.wallet}`} className="block w-full">
-                <Badge variant="outline">{lp.timeInMarket}</Badge>
-              </Link>
-            </TableCell>
-          </TableRow>
-        ))}
+        {liquidityProviders.map((lp, index) => {
+          const mockData = getMockDataForWallet(index);
+          // Parse datetime string from ClickHouse (format: "YYYY-MM-DD HH:MM:SS")
+          const timeInMarket = getTimeDuration(new Date(lp.first_position_date));
+
+          return (
+            <TableRow key={lp.wallet_address} className="cursor-pointer hover:bg-accent">
+              <TableCell className="font-mono text-sm">
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {truncateAddress(lp.wallet_address, 6)}
+                </Link>
+              </TableCell>
+              <TableCell className="font-medium">
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {mockData.assetsValue}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {lp.total_positions}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {lp.unique_pools}
+                </Link>
+              </TableCell>
+              <TableCell className={mockData.pnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {mockData.pnl}
+                </Link>
+              </TableCell>
+              <TableCell className={mockData.adjustedPnl.startsWith('+') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  {mockData.adjustedPnl}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={`/wallet/${lp.wallet_address}`} className="block w-full">
+                  <Badge variant="outline">{timeInMarket}</Badge>
+                </Link>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
 }
 
-export function LPExplorer() {
+export async function LPExplorer() {
+  // Fetch liquidity providers from ClickHouse
+  const liquidityProviders = await getTopLiquidityProviders(5);
+
   return (
     <Card>
       <CardHeader>
@@ -143,7 +110,7 @@ export function LPExplorer() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <LPTable />
+        <LPTable liquidityProviders={liquidityProviders} />
       </CardContent>
     </Card>
   );

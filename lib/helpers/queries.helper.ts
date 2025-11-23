@@ -129,3 +129,32 @@ export async function getTopPools(limit: number = 5): Promise<PoolData[]> {
   const result = await ClickHouseService.queryWithParams<PoolData>(query);
   return result;
 }
+
+export interface LiquidityProviderData {
+  wallet_address: string;
+  total_positions: string;
+  unique_pools: string;
+  first_position_date: string; // DateTime string from ClickHouse
+}
+
+/**
+ * Get top liquidity providers with 12-150 positions
+ * Ordered by earliest position date (most experienced first)
+ */
+export async function getTopLiquidityProviders(limit: number = 5): Promise<LiquidityProviderData[]> {
+  const query = `
+    SELECT
+      sender as wallet_address,
+      count(DISTINCT position_id) as total_positions,
+      count(DISTINCT pool_id) as unique_pools,
+      min(last_updated_timestamp) as first_position_date
+    FROM positions
+    GROUP BY sender
+    HAVING total_positions >= 12 AND total_positions <= 150
+    ORDER BY first_position_date ASC
+    LIMIT ${limit}
+  `;
+
+  const result = await ClickHouseService.queryWithParams<LiquidityProviderData>(query);
+  return result;
+}
