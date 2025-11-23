@@ -72,12 +72,7 @@ export default async function WalletPage({ params }: PageProps) {
         symbol1: mockData.symbol1,
         fees0: mockData.fees0,
         fees1: mockData.fees1,
-        age: getRelativeTime(
-          // Check if timestamp is already in milliseconds (> year 2100 in seconds)
-          pos.creation_timestamp > 4102444800
-            ? new Date(pos.creation_timestamp)
-            : new Date(pos.creation_timestamp * 1000)
-        ),
+        age: getRelativeTime(new Date(pos.creation_timestamp)),
         pnl: mockData.pnl,
         pnlAdjusted: mockData.pnlAdjusted,
         tickLower: pos.tick_lower,

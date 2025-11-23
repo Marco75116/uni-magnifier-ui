@@ -137,7 +137,7 @@ export function formatDateTime(date: Date | string | number): string {
 }
 
 /**
- * Get relative time string (e.g., "2 hours ago")
+ * Get relative time string (e.g., "2 hours")
  */
 export function getRelativeTime(date: Date | string | number): string {
   const d = new Date(date);
@@ -156,11 +156,11 @@ export function getRelativeTime(date: Date | string | number): string {
   for (const [unit, secondsInUnit] of Object.entries(intervals)) {
     const interval = Math.floor(seconds / secondsInUnit);
     if (interval >= 1) {
-      return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+      return `${interval} ${unit}${interval > 1 ? 's' : ''}`;
     }
   }
 
-  return 'just now';
+  return '< 1 minute';
 }
 
 /**

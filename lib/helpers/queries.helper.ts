@@ -186,7 +186,7 @@ export interface WalletPositionData {
   tick_upper: number;
   liquidity: string;
   creation_block_number: number;
-  creation_timestamp: number;
+  creation_timestamp: string; // DateTime string from ClickHouse
 }
 
 /**
