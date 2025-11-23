@@ -27,13 +27,14 @@ interface WalletPosition {
 
 interface WalletPositionsTableWrapperProps {
   positions: WalletPosition[];
+  totalPositions: number;
 }
 
-export function WalletPositionsTableWrapper({ positions }: WalletPositionsTableWrapperProps) {
+export function WalletPositionsTableWrapper({ positions, totalPositions }: WalletPositionsTableWrapperProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const totalPages = Math.ceil(positions.length / itemsPerPage);
+  const totalPages = Math.ceil(totalPositions / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPositions = positions.slice(startIndex, endIndex);
@@ -57,7 +58,7 @@ export function WalletPositionsTableWrapper({ positions }: WalletPositionsTableW
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1} to {Math.min(endIndex, positions.length)} of {positions.length} positions
+            Showing {startIndex + 1} to {Math.min(endIndex, totalPositions)} of {totalPositions} positions
           </div>
           <div className="flex items-center gap-2">
             <Button

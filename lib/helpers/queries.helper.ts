@@ -158,3 +158,22 @@ export async function getTopLiquidityProviders(limit: number = 5): Promise<Liqui
   const result = await ClickHouseService.queryWithParams<LiquidityProviderData>(query);
   return result;
 }
+
+interface WalletTotalPositionsResult {
+  total_positions: string;
+}
+
+/**
+ * Get total count of positions for a specific wallet address
+ */
+export async function getWalletTotalPositions(walletAddress: string): Promise<number> {
+  const query = `
+    SELECT
+      COUNT(*) as total_positions
+    FROM positions
+    WHERE sender = '${walletAddress.toLowerCase()}'
+  `;
+
+  const result = await ClickHouseService.queryWithParams<WalletTotalPositionsResult>(query);
+  return parseInt(result[0]?.total_positions || '0');
+}

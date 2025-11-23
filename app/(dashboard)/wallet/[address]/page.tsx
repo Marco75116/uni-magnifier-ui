@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { WalletStatsCards } from '@/components/wallet/wallet-stats-cards';
 import { WalletPositionsTableWrapper } from '@/components/wallet/wallet-positions-table-wrapper';
 import { CopyAddressButton } from '@/components/wallet/copy-address-button';
+import { getWalletTotalPositions } from '@/lib/helpers/queries.helper';
 
 export const metadata = generateMetadata({
   title: 'Wallet Details',
@@ -16,6 +17,9 @@ interface PageProps {
 
 export default async function WalletPage({ params }: PageProps) {
   const { address } = await params;
+
+  // Fetch real total positions count from ClickHouse
+  const totalPositionsCount = await getWalletTotalPositions(address);
 
   // Mock data - will be replaced with real data from ClickHouse
   const rawPositions = [
@@ -318,7 +322,7 @@ export default async function WalletPage({ params }: PageProps) {
     totalValue: `$${(totalPortfolioValue / 1000000).toFixed(2)}M`,
     totalValueChange: '+3.2%',
     activePositions: activePositionsCount,
-    totalPositions: positions.length,
+    totalPositions: totalPositionsCount, // Use real count from ClickHouse
     totalFees: '$18,432.56',
     totalFeesChange: '+$342.18',
     realizedPnL: '+$24,567.89',
@@ -360,11 +364,11 @@ export default async function WalletPage({ params }: PageProps) {
         <CardHeader>
           <CardTitle>Positions</CardTitle>
           <CardDescription>
-            Showing {positions.length} positions
+            Showing {Math.min(10, totalPositionsCount)} of {totalPositionsCount} positions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <WalletPositionsTableWrapper positions={positions} />
+          <WalletPositionsTableWrapper positions={positions} totalPositions={totalPositionsCount} />
         </CardContent>
       </Card>
     </div>
