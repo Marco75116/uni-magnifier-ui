@@ -7,6 +7,7 @@ import { PoolStatsCards } from '@/components/pool/pool-stats-cards';
 import { PoolBalanceCard } from '@/components/pool/pool-balance-card';
 import { PoolInfoTable } from '@/components/pool/pool-info-table';
 import { PoolPositionsTableWrapper } from '@/components/pool/pool-positions-table-wrapper';
+import { PoolAnalyticsCarousel } from '@/components/pool/pool-analytics-carousel';
 
 export const metadata = generateMetadata({
   title: 'Pool Details',
@@ -465,12 +466,10 @@ export default async function PoolPage({ params }: PageProps) {
               <Card>
                 <CardHeader>
                   <CardTitle>Analytics</CardTitle>
-                  <CardDescription>Charts and historical data</CardDescription>
+                  <CardDescription>Key metrics and performance indicators</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                    Charts will be implemented here
-                  </div>
+                  <PoolAnalyticsCarousel />
                 </CardContent>
               </Card>
             </TabsContent>
