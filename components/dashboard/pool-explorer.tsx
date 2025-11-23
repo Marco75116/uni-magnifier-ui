@@ -38,45 +38,48 @@ function PoolTable({ pools }: PoolTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {pools.map((pool) => (
-          <TableRow key={pool.pool_id} className="cursor-pointer hover:bg-accent">
-            <TableCell className="font-medium">
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                {formatPoolName(pool.currency0, pool.currency1, pool.chainId)}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                $125.4M
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                $45.2M
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                $312.8M
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                <Badge variant="outline">{formatFeeTier(pool.fee)}</Badge>
-              </Link>
-            </TableCell>
-            <TableCell className="text-green-600 dark:text-green-400">
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                12.4%
-              </Link>
-            </TableCell>
-            <TableCell>
-              <Link href={`/pool/${pool.pool_id}`} className="block w-full">
-                <Badge variant="secondary">{getNetworkName(pool.chainId)}</Badge>
-              </Link>
-            </TableCell>
-          </TableRow>
-        ))}
+        {pools.map((pool) => {
+          const poolDetailUrl = `/pool/${pool.chainId}/${pool.pool_id}`;
+          return (
+            <TableRow key={pool.pool_id} className="cursor-pointer hover:bg-accent">
+              <TableCell className="font-medium">
+                <Link href={poolDetailUrl} className="block w-full">
+                  {formatPoolName(pool.currency0, pool.currency1, pool.chainId)}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={poolDetailUrl} className="block w-full">
+                  $125.4M
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={poolDetailUrl} className="block w-full">
+                  $45.2M
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={poolDetailUrl} className="block w-full">
+                  $312.8M
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={poolDetailUrl} className="block w-full">
+                  <Badge variant="outline">{formatFeeTier(pool.fee)}</Badge>
+                </Link>
+              </TableCell>
+              <TableCell className="text-green-600 dark:text-green-400">
+                <Link href={poolDetailUrl} className="block w-full">
+                  12.4%
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link href={poolDetailUrl} className="block w-full">
+                  <Badge variant="secondary">{getNetworkName(pool.chainId)}</Badge>
+                </Link>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
