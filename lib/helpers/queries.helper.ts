@@ -77,3 +77,18 @@ export async function getBlueChipPools(): Promise<number> {
 
   return parseInt(result[0]?.total_bluechip_pools || '0');
 }
+
+interface TotalPositionsResult {
+  total_positions: string;
+}
+
+/**
+ * Get total count of distinct positions
+ */
+export async function getTotalPositions(): Promise<number> {
+  const result = await ClickHouseService.queryWithParams<TotalPositionsResult>(
+    'SELECT count(DISTINCT position_id) as total_positions FROM positions'
+  );
+
+  return parseInt(result[0]?.total_positions || '0');
+}

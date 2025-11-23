@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Network, Droplets, ShieldCheck, Users } from 'lucide-react';
 import { networksConfigs } from '@/lib/constants/network.constant';
-import { getTotalPools, getBlueChipPools } from '@/lib/helpers/queries.helper';
+import { getTotalPools, getBlueChipPools, getTotalPositions } from '@/lib/helpers/queries.helper';
 
 interface MetricCardProps {
   title: string;
@@ -36,7 +36,11 @@ export async function MetricCards() {
     .filter((ticker, index, self) => self.indexOf(ticker) === index)
     .join(', ');
 
-  const [totalPools, blueChipPools] = await Promise.all([getTotalPools(), getBlueChipPools()]);
+  const [totalPools, blueChipPools, totalPositions] = await Promise.all([
+    getTotalPools(),
+    getBlueChipPools(),
+    getTotalPositions()
+  ]);
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -60,8 +64,8 @@ export async function MetricCards() {
       />
       <MetricCard
         title="Total LPs"
-        value="45,231"
-        subtitle="Active liquidity providers"
+        value={totalPositions.toLocaleString()}
+        subtitle="Active lp positions"
         icon={<Users className="h-4 w-4 text-muted-foreground" />}
       />
     </div>
